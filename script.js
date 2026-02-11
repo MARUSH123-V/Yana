@@ -1,4 +1,4 @@
-let mouse = { x: null, y: null, radius: 30 };
+let mouse = { x: null, y: null, radius: 40 };
 
 window.addEventListener("mousemove", (e) => {
   mouse.x = e.x;
@@ -24,10 +24,8 @@ function resizeCanvas() {
   canvas.height = window.innerHeight;
 }
 resizeCanvas();
-
 window.addEventListener("resize", () => location.reload());
 
-// ---------------- Определяем устройство ----------------
 const isMobile = window.innerWidth < 600;
 
 // ---------------- Этапы ----------------
@@ -36,7 +34,7 @@ let textTargets = [];
 let heartTargets = [];
 let stage = 0;
 
-// ---------------- Создание текста ----------------
+// ---------------- Текст ----------------
 function createTextPoints(text) {
   const off = document.createElement("canvas");
   const offCtx = off.getContext("2d");
@@ -44,19 +42,19 @@ function createTextPoints(text) {
   off.width = canvas.width;
   off.height = canvas.height;
 
-  let fontSize = isMobile
-    ? canvas.width * 0.09
-    : 90;
+  let fontSize = isMobile ? canvas.width * 0.085 : 90;
 
   offCtx.font = `bold ${fontSize}px Arial`;
   offCtx.fillStyle = "white";
   offCtx.textAlign = "center";
+  offCtx.textBaseline = "middle";
 
+  // 🔥 НОРМАЛЬНОЕ позиционирование
   let textY = isMobile
-    ? canvas.height * 0.32
+    ? canvas.height * 0.22   // ниже чем было, но не у края
     : canvas.height / 3;
 
-  offCtx.fillText(text, off.width / 2, textY);
+  offCtx.fillText(text, canvas.width / 2, textY);
 
   const data = offCtx.getImageData(0, 0, off.width, off.height).data;
   let points = [];
@@ -83,7 +81,6 @@ function heartShape(t) {
   return { x, y };
 }
 
-// ---------------- Цели ----------------
 textTargets = createTextPoints("ЯНА С ДНЕМ РОЖДЕНИЯ");
 
 let heartCount = isMobile ? 2500 : 4000;
@@ -92,10 +89,11 @@ for (let i = 0; i < heartCount; i++) {
   const t = Math.random() * Math.PI * 2;
   const pos = heartShape(t);
 
-  let scale = isMobile ? 9 : 12;
+  let scale = isMobile ? 8 : 12;
 
+  // ❤️ Сердце под текстом
   let heartOffset = isMobile
-    ? canvas.height * 0.68
+    ? canvas.height * 0.58
     : canvas.height / 1.7;
 
   heartTargets.push({
@@ -131,7 +129,6 @@ function animate() {
 
   particles.forEach((p, i) => {
 
-    // Этап 0 — полёт к центру
     if (stage === 0) {
       p.x += p.vx;
       p.y += p.vy;
@@ -142,14 +139,12 @@ function animate() {
       }
     }
 
-    // Этап 1 — взрыв
     else if (stage === 1) {
       p.vx = (Math.random() - 0.5) * 3;
       p.vy = (Math.random() - 0.5) * 3;
       stage = 2;
     }
 
-    // Этап 2 — сборка
     else if (stage === 2) {
 
       if (i < textTargets.length) {
@@ -163,7 +158,7 @@ function animate() {
         }
       }
 
-      if (p.targetX !== null && p.targetY !== null) {
+      if (p.targetX !== null) {
         let dx = p.targetX - p.x;
         let dy = p.targetY - p.y;
         p.x += dx * 0.02;
@@ -171,7 +166,7 @@ function animate() {
       }
     }
 
-    // Реакция на мышь / палец
+    // интерактив
     if (mouse.x !== null && mouse.y !== null) {
       let dx = p.x - mouse.x;
       let dy = p.y - mouse.y;
