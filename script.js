@@ -62,7 +62,7 @@ function createTextPoints() {
     let maxWidth = canvas.width * 0.9;
 
     while (offCtx.measureText("С ДНЕМ РОЖДЕНИЯ").width > maxWidth) {
-      fontSize -= 200;
+      fontSize -= 2;
       offCtx.font = `bold ${fontSize}px Arial`;
     }
   }
@@ -86,10 +86,10 @@ function createTextPoints() {
   const data = offCtx.getImageData(0, 0, off.width, off.height).data;
   let points = [];
 
-  for (let y = 0; y < off.height; y += 6) {
-    for (let x = 0; x < off.width; x += 6) {
+  for (let y = 0; y < off.height; y += 4) {
+    for (let x = 0; x < off.width; x += 4) {
       const index = (y * off.width + x) * 4;
-      if (data[index + 3] > 128) {
+      if (data[index + 3] > 100) {
         points.push({ x, y });
       }
     }
