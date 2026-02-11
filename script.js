@@ -1,13 +1,18 @@
 let mouse = {
   x: null,
   y: null,
-  radius: 60
+  radius: 40
 };
 
 window.addEventListener("mousemove", (e) => {
   mouse.x = e.x;
   mouse.y = e.y;
 });
+
+window.addEventListener("touchmove", (e) => {
+  mouse.x = e.touches[0].clientX;
+  mouse.y = e.touches[0].clientY;
+}, { passive: true });
 
 window.addEventListener("mouseout", () => {
   mouse.x = null;
@@ -38,7 +43,8 @@ function createTextPoints(text) {
   off.height = canvas.height;
 
   offCtx.fillStyle = "white";
-  offCtx.font = "bold 90px Arial";
+  let fontSize = canvas.width < 600 ? 40 : 90;
+offCtx.font = `bold ${fontSize}px Arial`;
   offCtx.textAlign = "center";
   offCtx.fillText(text, off.width / 2, off.height / 3);
 
@@ -118,6 +124,15 @@ for (let i = 0; i < totalParticles; i++) {
 // ---------------- АНИМАЦИЯ ----------------
 
 function animate() {
+  function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+resizeCanvas();
+window.addEventListener("resize", () => {
+  location.reload(); // проще всего пересоздать сцену
+});
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   particles.forEach((p, i) => {
