@@ -62,7 +62,7 @@ function createTextPoints() {
     let maxWidth = canvas.width * 0.9;
 
     while (offCtx.measureText("С ДНЕМ РОЖДЕНИЯ").width > maxWidth) {
-      fontSize -= 2;
+      fontSize -= 200;
       offCtx.font = `bold ${fontSize}px Arial`;
     }
   }
