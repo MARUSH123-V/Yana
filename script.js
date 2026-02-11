@@ -73,7 +73,7 @@ function heartShape(t) {
 // ---------------- Создание целей ----------------
 textTargets = createTextPoints("ЯНА С ДНЕМ РОЖДЕНИЯ");
 
-let heartCount = canvas.width < 600 ? 250 : 500;
+let heartCount = canvas.width < 400 ? 100 : 300;
 for (let i = 0; i < heartCount; i++) {
   const t = Math.random() * Math.PI * 2;
   const pos = heartShape(t);
