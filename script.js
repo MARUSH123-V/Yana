@@ -58,36 +58,48 @@ function createTextPoints() {
   let fontSize = isMobile ? 70 : 80;
 
   if (isMobile) {
-    offCtx.font = `bold ${fontSize}px Arial`;
+    offCtx.font = `bold ${fontSize}px 'Courier New', monospace`;
     let maxWidth = canvas.width * 0.9;
 
     while (offCtx.measureText("С ДНЕМ РОЖДЕНИЯ").width > maxWidth) {
       fontSize -= 2;
-      offCtx.font = `bold ${fontSize}px Arial`;
+      offCtx.font = `bold ${fontSize}px 'Courier New', monospace`;
     }
   }
 
-  offCtx.font = `bold ${fontSize}px Arial`;
+  offCtx.font = `bold ${fontSize}px 'Courier New', monospace`;
 
   let startY = isMobile
     ? canvas.height * 0.20
     : canvas.height / 3;
 
-  let lineHeight = fontSize * 1.2;
+  let lineHeight = fontSize * 1.4;
 
   lines.forEach((line, index) => {
-    offCtx.fillText(
-      line,
-      canvas.width / 2,
-      startY + index * lineHeight
-    );
+    function drawTextWithSpacing(ctx, text, x, y, spacing) {
+  let startX = x - ctx.measureText(text).width / 2;
+
+  for (let char of text) {
+    ctx.fillText(char, startX, y);
+    startX += ctx.measureText(char).width + spacing;
+  }
+}
+drawTextWithSpacing(
+  offCtx,
+  line,
+  canvas.width / 2,
+  startY + index * lineHeight,
+  isMobile ? 6 : 4
+);
   });
 
   const data = offCtx.getImageData(0, 0, off.width, off.height).data;
   let points = [];
 
-  for (let y = 0; y < off.height; y += 4) {
-    for (let x = 0; x < off.width; x += 4) {
+  const step = isMobile ? 8 : 6;
+
+for (let y = 0; y < off.height; y += step) {
+  for (let x = 0; x < off.width; x += step) {
       const index = (y * off.width + x) * 4;
       if (data[index + 3] > 100) {
         points.push({ x, y });
