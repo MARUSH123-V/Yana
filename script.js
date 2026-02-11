@@ -1,20 +1,14 @@
-// ---------------- Mouse / Touch ----------------
 let mouse = { x: null, y: null, radius: 40 };
 
-window.addEventListener("mousemove", e => {
-  mouse.x = e.clientX;
-  mouse.y = e.clientY;
+window.addEventListener("mousemove", (e) => {
+  mouse.x = e.x;
+  mouse.y = e.y;
 });
 
-window.addEventListener("touchmove", e => {
+window.addEventListener("touchmove", (e) => {
   mouse.x = e.touches[0].clientX;
   mouse.y = e.touches[0].clientY;
 }, { passive: true });
-
-window.addEventListener("touchend", () => {
-  mouse.x = null;
-  mouse.y = null;
-});
 
 window.addEventListener("mouseout", () => {
   mouse.x = null;
@@ -34,13 +28,24 @@ window.addEventListener("resize", () => location.reload());
 
 const isMobile = window.innerWidth < 600;
 
-// ---------------- Stages ----------------
+// ---------------- Этапы ----------------
 let particles = [];
 let textTargets = [];
 let heartTargets = [];
 let stage = 0;
 
-// ---------------- Text ----------------
+// ---------------- Текст ----------------
+function drawTextWithSpacing(ctx, text, x, y, spacing) {
+  let totalWidth = 0;
+  for (let c of text) totalWidth += ctx.measureText(c).width + spacing;
+  let startX = x - totalWidth / 2;
+
+  for (let c of text) {
+    ctx.fillText(c, startX, y);
+    startX += ctx.measureText(c).width + spacing;
+  }
+}
+
 function createTextPoints() {
   const off = document.createElement("canvas");
   const offCtx = off.getContext("2d");
@@ -49,40 +54,39 @@ function createTextPoints() {
   off.height = canvas.height;
 
   offCtx.fillStyle = "white";
-  offCtx.textAlign = "center";
+  offCtx.textAlign = "left";
   offCtx.textBaseline = "middle";
 
   const lines = isMobile
     ? ["ЯНА", "С ДНЕМ РОЖДЕНИЯ"]
     : ["ЯНА С ДНЕМ РОЖДЕНИЯ"];
 
-  const fontSize = isMobile ? 70 : 80;
-  offCtx.font = `bold ${fontSize}px Arial`;
+  let fontSize = isMobile ? 72 : 82;
+  offCtx.font = `bold ${fontSize}px Courier New, monospace`;
 
-  const startY = isMobile
-    ? canvas.height * 0.20
-    : canvas.height / 3;
-
-  const lineHeight = fontSize * 1.2;
+  let startY = isMobile ? canvas.height * 0.22 : canvas.height / 3;
+  let lineHeight = fontSize * 1.5;
+  let letterSpacing = isMobile ? 4 : 3;
 
   lines.forEach((line, i) => {
-    offCtx.fillText(
+    drawTextWithSpacing(
+      offCtx,
       line,
       canvas.width / 2,
-      startY + i * lineHeight
+      startY + i * lineHeight,
+      letterSpacing
     );
   });
 
   const data = offCtx.getImageData(0, 0, off.width, off.height).data;
-  const points = [];
+  let points = [];
 
-  // 🔧 ПЛОТНОСТЬ ТЕКСТА (меняй ТОЛЬКО это)
   const step = isMobile ? 6 : 5;
 
   for (let y = 0; y < off.height; y += step) {
     for (let x = 0; x < off.width; x += step) {
-      const i = (y * off.width + x) * 4;
-      if (data[i + 3] > 128) {
+      const index = (y * off.width + x) * 4;
+      if (data[index + 3] > 150) {
         points.push({ x, y });
       }
     }
@@ -91,7 +95,7 @@ function createTextPoints() {
   return points;
 }
 
-// ---------------- Heart ----------------
+// ---------------- Сердце ----------------
 function heartShape(t) {
   return {
     x: 16 * Math.pow(Math.sin(t), 3),
@@ -103,26 +107,24 @@ function heartShape(t) {
   };
 }
 
-// ---------------- Build targets ----------------
 textTargets = createTextPoints();
 
-const heartCount = isMobile ? 2500 : 4000;
-const heartScale = isMobile ? 8 : 12;
-const heartOffsetY = isMobile
-  ? canvas.height * 0.48
-  : canvas.height / 1.7;
+let heartCount = isMobile ? 2600 : 4200;
 
 for (let i = 0; i < heartCount; i++) {
   const t = Math.random() * Math.PI * 2;
-  const p = heartShape(t);
+  const pos = heartShape(t);
+
+  const scale = isMobile ? 8 : 12;
+  const offsetY = isMobile ? canvas.height * 0.52 : canvas.height / 1.7;
 
   heartTargets.push({
-    x: canvas.width / 2 + p.x * heartScale,
-    y: heartOffsetY - p.y * heartScale,
+    x: canvas.width / 2 + pos.x * scale,
+    y: offsetY - pos.y * scale,
   });
 }
 
-// ---------------- Particles ----------------
+// ---------------- Частицы ----------------
 const leftStart = { x: 80, y: canvas.height - 100 };
 const rightStart = { x: canvas.width - 80, y: canvas.height - 100 };
 const center = { x: canvas.width / 2, y: canvas.height / 2 };
@@ -139,11 +141,11 @@ for (let i = 0; i < totalParticles; i++) {
     targetY: null,
     vx: (center.x - start.x) * 0.007,
     vy: (center.y - start.y) * 0.007,
-    size: 3,
+    size: isMobile ? 2.4 : 2.8,
   });
 }
 
-// ---------------- Animation ----------------
+// ---------------- Анимация ----------------
 function animate() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -151,13 +153,10 @@ function animate() {
     if (stage === 0) {
       p.x += p.vx;
       p.y += p.vy;
-
       if (
         Math.abs(p.x - center.x) < 5 &&
         Math.abs(p.y - center.y) < 5
-      ) {
-        stage = 1;
-      }
+      ) stage = 1;
     } else if (stage === 1) {
       p.vx = (Math.random() - 0.5) * 3;
       p.vy = (Math.random() - 0.5) * 3;
@@ -174,16 +173,16 @@ function animate() {
         }
       }
 
-      p.x += (p.targetX - p.x) * 0.02;
-      p.y += (p.targetY - p.y) * 0.02;
+      if (p.targetX != null) {
+        p.x += (p.targetX - p.x) * 0.02;
+        p.y += (p.targetY - p.y) * 0.02;
+      }
     }
 
-    // ---- Touch wave (стабильно)
-    if (mouse.x !== null) {
+    if (mouse.x != null) {
       const dx = p.x - mouse.x;
       const dy = p.y - mouse.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-
       if (dist < mouse.radius) {
         const f = (mouse.radius - dist) / mouse.radius;
         p.x += dx * f * 0.2;
