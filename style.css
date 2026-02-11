@@ -1,0 +1,22 @@
+body {
+  margin: 1;
+  overflow: hidden;
+  background: radial-gradient(circle at center, #1a0033, #000);
+}
+canvas{
+  position:absolute;
+  top:0;
+  left:0;
+}
+.cat{
+  position:fixed;
+  bottom:20px;
+  width:150px;   /* размер */
+  z-index:10;
+}
+.left_cat{
+  left:50px;
+}
+.right_cat{
+  right:50px;
+}
