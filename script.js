@@ -55,7 +55,7 @@ function createTextPoints() {
   }
 
   // 🔥 АВТО-ПОДБОР РАЗМЕРА
-  let fontSize = isMobile ? 80 : 90;
+  let fontSize = isMobile ? 70 : 80;
 
   if (isMobile) {
     offCtx.font = `bold ${fontSize}px Arial`;
