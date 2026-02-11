@@ -24,7 +24,6 @@ function resizeCanvas() {
   canvas.height = window.innerHeight;
 }
 resizeCanvas();
-
 window.addEventListener("resize", () => location.reload());
 
 const isMobile = window.innerWidth < 600;
@@ -48,21 +47,30 @@ function createTextPoints() {
   offCtx.textBaseline = "middle";
 
   let lines;
-  let fontSize;
 
   if (isMobile) {
-    // 📱 Две строки для телефона
     lines = ["ЯНА", "С ДНЕМ РОЖДЕНИЯ"];
-    fontSize = canvas.width * 0.11;
   } else {
     lines = ["ЯНА С ДНЕМ РОЖДЕНИЯ"];
-    fontSize = 90;
+  }
+
+  // 🔥 АВТО-ПОДБОР РАЗМЕРА
+  let fontSize = isMobile ? 80 : 90;
+
+  if (isMobile) {
+    offCtx.font = `bold ${fontSize}px Arial`;
+    let maxWidth = canvas.width * 0.9;
+
+    while (offCtx.measureText("С ДНЕМ РОЖДЕНИЯ").width > maxWidth) {
+      fontSize -= 2;
+      offCtx.font = `bold ${fontSize}px Arial`;
+    }
   }
 
   offCtx.font = `bold ${fontSize}px Arial`;
 
   let startY = isMobile
-    ? canvas.height * 0.18
+    ? canvas.height * 0.20
     : canvas.height / 3;
 
   let lineHeight = fontSize * 1.2;
@@ -110,9 +118,8 @@ for (let i = 0; i < heartCount; i++) {
 
   let scale = isMobile ? 8 : 12;
 
-  // ❤️ Поднято выше гифок
   let heartOffset = isMobile
-    ? canvas.height * 0.45
+    ? canvas.height * 0.48
     : canvas.height / 1.7;
 
   heartTargets.push({
@@ -185,7 +192,6 @@ function animate() {
       }
     }
 
-    // интерактив
     if (mouse.x !== null && mouse.y !== null) {
       let dx = p.x - mouse.x;
       let dy = p.y - mouse.y;
