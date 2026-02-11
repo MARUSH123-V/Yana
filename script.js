@@ -35,6 +35,17 @@ let heartTargets = [];
 let stage = 0;
 
 // ---------------- Текст ----------------
+function drawTextWithSpacing(ctx, text, x, y, spacing) {
+  let totalWidth = 0;
+  for (let c of text) totalWidth += ctx.measureText(c).width + spacing;
+  let startX = x - totalWidth / 2;
+
+  for (let c of text) {
+    ctx.fillText(c, startX, y);
+    startX += ctx.measureText(c).width + spacing;
+  }
+}
+
 function createTextPoints() {
   const off = document.createElement("canvas");
   const offCtx = off.getContext("2d");
@@ -43,65 +54,39 @@ function createTextPoints() {
   off.height = canvas.height;
 
   offCtx.fillStyle = "white";
-  offCtx.textAlign = "center";
+  offCtx.textAlign = "left";
   offCtx.textBaseline = "middle";
 
-  let lines;
+  const lines = isMobile
+    ? ["ЯНА", "С ДНЕМ РОЖДЕНИЯ"]
+    : ["ЯНА С ДНЕМ РОЖДЕНИЯ"];
 
-  if (isMobile) {
-    lines = ["ЯНА", "С ДНЕМ РОЖДЕНИЯ"];
-  } else {
-    lines = ["ЯНА С ДНЕМ РОЖДЕНИЯ"];
-  }
+  let fontSize = isMobile ? 72 : 82;
+  offCtx.font = `bold ${fontSize}px Courier New, monospace`;
 
-  // 🔥 АВТО-ПОДБОР РАЗМЕРА
-  let fontSize = isMobile ? 70 : 80;
+  let startY = isMobile ? canvas.height * 0.22 : canvas.height / 3;
+  let lineHeight = fontSize * 1.5;
+  let letterSpacing = isMobile ? 4 : 3;
 
-  if (isMobile) {
-    offCtx.font = `bold ${fontSize}px 'Courier New', monospace`;
-    let maxWidth = canvas.width * 0.9;
-
-    while (offCtx.measureText("С ДНЕМ РОЖДЕНИЯ").width > maxWidth) {
-      fontSize -= 2;
-      offCtx.font = `bold ${fontSize}px 'Courier New', monospace`;
-    }
-  }
-
-  offCtx.font = `bold ${fontSize}px 'Courier New', monospace`;
-
-  let startY = isMobile
-    ? canvas.height * 0.20
-    : canvas.height / 3;
-
-  let lineHeight = fontSize * 1.4;
-
-  lines.forEach((line, index) => {
-    function drawTextWithSpacing(ctx, text, x, y, spacing) {
-  let startX = x - ctx.measureText(text).width / 2;
-
-  for (let char of text) {
-    ctx.fillText(char, startX, y);
-    startX += ctx.measureText(char).width + spacing;
-  }
-}
-drawTextWithSpacing(
-  offCtx,
-  line,
-  canvas.width / 2,
-  startY + index * lineHeight,
-  isMobile ? 6 : 4
-);
+  lines.forEach((line, i) => {
+    drawTextWithSpacing(
+      offCtx,
+      line,
+      canvas.width / 2,
+      startY + i * lineHeight,
+      letterSpacing
+    );
   });
 
   const data = offCtx.getImageData(0, 0, off.width, off.height).data;
   let points = [];
 
-  const step = isMobile ? 8 : 6;
+  const step = isMobile ? 6 : 5;
 
-for (let y = 0; y < off.height; y += step) {
-  for (let x = 0; x < off.width; x += step) {
+  for (let y = 0; y < off.height; y += step) {
+    for (let x = 0; x < off.width; x += step) {
       const index = (y * off.width + x) * 4;
-      if (data[index + 3] > 100) {
+      if (data[index + 3] > 150) {
         points.push({ x, y });
       }
     }
@@ -112,31 +97,30 @@ for (let y = 0; y < off.height; y += step) {
 
 // ---------------- Сердце ----------------
 function heartShape(t) {
-  const x = 16 * Math.pow(Math.sin(t), 3);
-  const y = 13 * Math.cos(t)
-          - 5 * Math.cos(2 * t)
-          - 2 * Math.cos(3 * t)
-          - Math.cos(4 * t);
-  return { x, y };
+  return {
+    x: 16 * Math.pow(Math.sin(t), 3),
+    y:
+      13 * Math.cos(t) -
+      5 * Math.cos(2 * t) -
+      2 * Math.cos(3 * t) -
+      Math.cos(4 * t),
+  };
 }
 
 textTargets = createTextPoints();
 
-let heartCount = isMobile ? 2500 : 4000;
+let heartCount = isMobile ? 2600 : 4200;
 
 for (let i = 0; i < heartCount; i++) {
   const t = Math.random() * Math.PI * 2;
   const pos = heartShape(t);
 
-  let scale = isMobile ? 8 : 12;
-
-  let heartOffset = isMobile
-    ? canvas.height * 0.48
-    : canvas.height / 1.7;
+  const scale = isMobile ? 8 : 12;
+  const offsetY = isMobile ? canvas.height * 0.52 : canvas.height / 1.7;
 
   heartTargets.push({
     x: canvas.width / 2 + pos.x * scale,
-    y: heartOffset - pos.y * scale
+    y: offsetY - pos.y * scale,
   });
 }
 
@@ -157,7 +141,7 @@ for (let i = 0; i < totalParticles; i++) {
     targetY: null,
     vx: (center.x - start.x) * 0.007,
     vy: (center.y - start.y) * 0.007,
-    size: 3
+    size: isMobile ? 2.4 : 2.8,
   });
 }
 
@@ -166,53 +150,43 @@ function animate() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   particles.forEach((p, i) => {
-
     if (stage === 0) {
       p.x += p.vx;
       p.y += p.vy;
-
-      if (Math.abs(p.x - center.x) < 5 &&
-          Math.abs(p.y - center.y) < 5) {
-        stage = 1;
-      }
-    }
-
-    else if (stage === 1) {
+      if (
+        Math.abs(p.x - center.x) < 5 &&
+        Math.abs(p.y - center.y) < 5
+      ) stage = 1;
+    } else if (stage === 1) {
       p.vx = (Math.random() - 0.5) * 3;
       p.vy = (Math.random() - 0.5) * 3;
       stage = 2;
-    }
-
-    else if (stage === 2) {
-
+    } else {
       if (i < textTargets.length) {
         p.targetX = textTargets[i].x;
         p.targetY = textTargets[i].y;
       } else {
-        const index = i - textTargets.length;
-        if (heartTargets[index]) {
-          p.targetX = heartTargets[index].x;
-          p.targetY = heartTargets[index].y;
+        const h = heartTargets[i - textTargets.length];
+        if (h) {
+          p.targetX = h.x;
+          p.targetY = h.y;
         }
       }
 
-      if (p.targetX !== null) {
-        let dx = p.targetX - p.x;
-        let dy = p.targetY - p.y;
-        p.x += dx * 0.02;
-        p.y += dy * 0.02;
+      if (p.targetX != null) {
+        p.x += (p.targetX - p.x) * 0.02;
+        p.y += (p.targetY - p.y) * 0.02;
       }
     }
 
-    if (mouse.x !== null && mouse.y !== null) {
-      let dx = p.x - mouse.x;
-      let dy = p.y - mouse.y;
-      let dist = Math.sqrt(dx * dx + dy * dy);
-
+    if (mouse.x != null) {
+      const dx = p.x - mouse.x;
+      const dy = p.y - mouse.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist < mouse.radius) {
-        let force = (mouse.radius - dist) / mouse.radius;
-        p.x += dx * force * 0.2;
-        p.y += dy * force * 0.2;
+        const f = (mouse.radius - dist) / mouse.radius;
+        p.x += dx * f * 0.2;
+        p.y += dy * f * 0.2;
       }
     }
 
