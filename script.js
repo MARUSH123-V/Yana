@@ -24,6 +24,7 @@ function resizeCanvas() {
   canvas.height = window.innerHeight;
 }
 resizeCanvas();
+
 window.addEventListener("resize", () => location.reload());
 
 const isMobile = window.innerWidth < 600;
@@ -35,26 +36,44 @@ let heartTargets = [];
 let stage = 0;
 
 // ---------------- Текст ----------------
-function createTextPoints(text) {
+function createTextPoints() {
   const off = document.createElement("canvas");
   const offCtx = off.getContext("2d");
 
   off.width = canvas.width;
   off.height = canvas.height;
 
-  let fontSize = isMobile ? canvas.width * 0.085 : 90;
-
-  offCtx.font = `bold ${fontSize}px Arial`;
   offCtx.fillStyle = "white";
   offCtx.textAlign = "center";
   offCtx.textBaseline = "middle";
 
-  // 🔥 НОРМАЛЬНОЕ позиционирование
-  let textY = isMobile
-    ? canvas.height * 0.22   // ниже чем было, но не у края
+  let lines;
+  let fontSize;
+
+  if (isMobile) {
+    // 📱 Две строки для телефона
+    lines = ["ЯНА", "С ДНЕМ РОЖДЕНИЯ"];
+    fontSize = canvas.width * 0.11;
+  } else {
+    lines = ["ЯНА С ДНЕМ РОЖДЕНИЯ"];
+    fontSize = 90;
+  }
+
+  offCtx.font = `bold ${fontSize}px Arial`;
+
+  let startY = isMobile
+    ? canvas.height * 0.18
     : canvas.height / 3;
 
-  offCtx.fillText(text, canvas.width / 2, textY);
+  let lineHeight = fontSize * 1.2;
+
+  lines.forEach((line, index) => {
+    offCtx.fillText(
+      line,
+      canvas.width / 2,
+      startY + index * lineHeight
+    );
+  });
 
   const data = offCtx.getImageData(0, 0, off.width, off.height).data;
   let points = [];
@@ -81,7 +100,7 @@ function heartShape(t) {
   return { x, y };
 }
 
-textTargets = createTextPoints("ЯНА С ДНЕМ РОЖДЕНИЯ");
+textTargets = createTextPoints();
 
 let heartCount = isMobile ? 2500 : 4000;
 
@@ -91,9 +110,9 @@ for (let i = 0; i < heartCount; i++) {
 
   let scale = isMobile ? 8 : 12;
 
-  // ❤️ Сердце под текстом
+  // ❤️ Поднято выше гифок
   let heartOffset = isMobile
-    ? canvas.height * 0.58
+    ? canvas.height * 0.45
     : canvas.height / 1.7;
 
   heartTargets.push({
